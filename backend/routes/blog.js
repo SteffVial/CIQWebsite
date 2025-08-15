@@ -27,12 +27,23 @@ const router = express.Router();
 
 // Routes publiques (lecture)
 
-// GET /api/blog - Lister tous les posts (publics ou tous si admin)
-router.get('/',
-  optionalAuth, // Auth optionnelle pour différencier public/admin
-  rateLimit(60, 15 * 60 * 1000), // 60 requêtes par 15 minutes
-  getAllPosts
-);
+// GET /api/blog/health - Route de santé (DOIT être avant /:id)
+router.get('/health', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Service blog opérationnel',
+    timestamp: new Date().toISOString(),
+    features: [
+      'CRUD articles',
+      'Upload images',
+      'Système de tags',
+      'Recherche full-text',
+      'Gestion des brouillons',
+      'Système de slugs',
+      'Support multilingue'
+    ]
+  });
+});
 
 // GET /api/blog/search - Rechercher des articles
 router.get('/search',
@@ -53,7 +64,14 @@ router.get('/slug/:slug',
   getPostBySlug
 );
 
-// GET /api/blog/:id - Obtenir un post par ID
+// GET /api/blog - Lister tous les posts (publics ou tous si admin)
+router.get('/',
+  optionalAuth, // Auth optionnelle pour différencier public/admin
+  rateLimit(60, 15 * 60 * 1000), // 60 requêtes par 15 minutes
+  getAllPosts
+);
+
+// GET /api/blog/:id - Obtenir un post par ID (DOIT être après les routes spécifiques)
 router.get('/:id',
   optionalAuth,
   validateUUID('id'),
@@ -217,23 +235,7 @@ if (process.env.NODE_ENV === 'development') {
   );
 }
 
-// Route de santé pour le blog
-router.get('/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Service blog opérationnel',
-    timestamp: new Date().toISOString(),
-    features: [
-      'CRUD articles',
-      'Upload images',
-      'Système de tags',
-      'Recherche full-text',
-      'Gestion des brouillons',
-      'Système de slugs',
-      'Support multilingue'
-    ]
-  });
-});
+
 
 // Middleware de gestion d'erreur pour multer (upload)
 router.use((error, req, res, next) => {

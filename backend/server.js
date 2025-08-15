@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 // Import routes
 import authRoutes from './routes/auth.js';
 import blogRoutes from './routes/blog.js';
-// import jobRoutes from './routes/jobs.js';
+import jobRoutes from './routes/jobs.js';
 // import contentRoutes from './routes/content.js';
 
 // Configuration
@@ -42,7 +42,7 @@ app.get('/', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/blog', blogRoutes);
-// app.use('/api/jobs', jobRoutes);
+app.use('/api/jobs', jobRoutes);
 // app.use('/api/content', contentRoutes);
 
 // Route test database connection

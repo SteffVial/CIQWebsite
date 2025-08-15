@@ -1,0 +1,221 @@
+﻿STRUCTURE DE LA BASE DE DONNEES
+
+TABLE: activity_logs
+                             Table "public.activity_logs"
+   Column    |            Type             | Collation | Nullable |      Default       
+-------------+-----------------------------+-----------+----------+--------------------
+ id          | uuid                        |           | not null | uuid_generate_v4()
+ user_id     | uuid                        |           |          | 
+ action      | character varying(100)      |           | not null | 
+ entity_type | character varying(50)       |           |          | 
+ entity_id   | uuid                        |           |          | 
+ details     | jsonb                       |           |          | 
+ ip_address  | inet                        |           |          | 
+ created_at  | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "activity_logs_pkey" PRIMARY KEY, btree (id)
+    "idx_activity_logs_created_at" btree (created_at)
+    "idx_activity_logs_user_id" btree (user_id)
+Foreign-key constraints:
+    "activity_logs_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+
+
+
+
+TABLE: blog_posts
+                                     Table "public.blog_posts"
+      Column      |            Type             | Collation | Nullable |          Default           
+------------------+-----------------------------+-----------+----------+----------------------------
+ id               | uuid                        |           | not null | uuid_generate_v4()
+ title            | character varying(255)      |           | not null | 
+ slug             | character varying(255)      |           | not null | 
+ content          | text                        |           | not null | 
+ excerpt          | text                        |           |          | 
+ featured_image   | character varying(500)      |           |          | 
+ status           | character varying(20)       |           |          | 'draft'::character varying
+ language         | character varying(5)        |           |          | 'fr'::character varying
+ author_id        | uuid                        |           |          | 
+ published_at     | timestamp without time zone |           |          | 
+ created_at       | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ updated_at       | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ meta_title       | character varying(255)      |           |          | 
+ meta_description | text                        |           |          | 
+ tags             | text[]                      |           |          | 
+ view_count       | integer                     |           |          | 0
+Indexes:
+    "blog_posts_pkey" PRIMARY KEY, btree (id)
+    "blog_posts_slug_key" UNIQUE CONSTRAINT, btree (slug)
+    "idx_blog_posts_language" btree (language)
+    "idx_blog_posts_published_at" btree (published_at)
+    "idx_blog_posts_status" btree (status)
+Check constraints:
+    "blog_posts_language_check" CHECK (language::text = ANY (ARRAY['fr'::character varying, 'en'::character varying]::text[]))
+    "blog_posts_status_check" CHECK (status::text = ANY (ARRAY['draft'::character varying, 'published'::character varying, 'archived'::character varying]::text[]))
+Foreign-key constraints:
+    "blog_posts_author_id_fkey" FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE SET NULL
+Triggers:
+    update_blog_posts_updated_at BEFORE UPDATE ON blog_posts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+
+
+
+
+TABLE: job_applications
+                                    Table "public.job_applications"
+       Column       |            Type             | Collation | Nullable |           Default            
+--------------------+-----------------------------+-----------+----------+------------------------------
+ id                 | uuid                        |           | not null | uuid_generate_v4()
+ job_offer_id       | uuid                        |           | not null | 
+ first_name         | character varying(100)      |           | not null | 
+ last_name          | character varying(100)      |           | not null | 
+ email              | character varying(255)      |           | not null | 
+ phone              | character varying(50)       |           |          | 
+ cover_letter       | text                        |           |          | 
+ resume_url         | character varying(500)      |           |          | 
+ portfolio_url      | character varying(500)      |           |          | 
+ linkedin_url       | character varying(500)      |           |          | 
+ availability_date  | date                        |           |          | 
+ salary_expectation | character varying(100)      |           |          | 
+ status             | character varying(20)       |           |          | 'pending'::character varying
+ notes              | text                        |           |          | 
+ reviewed_by        | uuid                        |           |          | 
+ reviewed_at        | timestamp without time zone |           |          | 
+ applied_at         | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ updated_at         | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "job_applications_pkey" PRIMARY KEY, btree (id)
+    "idx_job_applications_applied_at" btree (applied_at)
+    "idx_job_applications_email" btree (email)
+    "idx_job_applications_job_offer" btree (job_offer_id)
+    "idx_job_applications_reviewed_by" btree (reviewed_by)
+    "idx_job_applications_status" btree (status)
+    "idx_job_applications_unique" UNIQUE, btree (job_offer_id, email)
+Check constraints:
+    "job_applications_status_check" CHECK (status::text = ANY (ARRAY['pending'::character varying, 'reviewed'::character varying, 'shortlisted'::character varying, 'interviewed'::character varying, 'offered'::character varying, 'hired'::character varying, 'rejected'::character varying]::text[]))
+Foreign-key constraints:
+    "job_applications_job_offer_id_fkey" FOREIGN KEY (job_offer_id) REFERENCES job_offers(id) ON DELETE CASCADE
+    "job_applications_reviewed_by_fkey" FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
+Triggers:
+    update_job_applications_updated_at BEFORE UPDATE ON job_applications FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+
+
+
+
+TABLE: job_offers
+                                        Table "public.job_offers"
+        Column        |            Type             | Collation | Nullable |           Default           
+----------------------+-----------------------------+-----------+----------+-----------------------------
+ id                   | uuid                        |           | not null | uuid_generate_v4()
+ title                | character varying(255)      |           | not null | 
+ department           | character varying(100)      |           |          | 
+ location             | character varying(100)      |           |          | 
+ employment_type      | character varying(50)       |           |          | 
+ experience_level     | character varying(50)       |           |          | 
+ description          | text                        |           | not null | 
+ requirements         | text                        |           |          | 
+ benefits             | text                        |           |          | 
+ salary_range         | character varying(100)      |           |          | 
+ status               | character varying(20)       |           |          | 'active'::character varying
+ language             | character varying(5)        |           |          | 'fr'::character varying
+ created_by           | uuid                        |           |          | 
+ application_deadline | date                        |           |          | 
+ created_at           | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ updated_at           | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "job_offers_pkey" PRIMARY KEY, btree (id)
+    "idx_job_offers_language" btree (language)
+    "idx_job_offers_status" btree (status)
+Check constraints:
+    "job_offers_employment_type_check" CHECK (employment_type::text = ANY (ARRAY['full-time'::character varying, 'part-time'::character varying, 'contract'::character varying, 'internship'::character varying]::text[]))
+    "job_offers_experience_level_check" CHECK (experience_level::text = ANY (ARRAY['entry'::character varying, 'mid'::character varying, 'senior'::character varying, 'executive'::character varying]::text[]))
+    "job_offers_language_check" CHECK (language::text = ANY (ARRAY['fr'::character varying, 'en'::character varying]::text[]))
+    "job_offers_status_check" CHECK (status::text = ANY (ARRAY['active'::character varying, 'paused'::character varying, 'closed'::character varying]::text[]))
+Foreign-key constraints:
+    "job_offers_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+Referenced by:
+    TABLE "job_applications" CONSTRAINT "job_applications_job_offer_id_fkey" FOREIGN KEY (job_offer_id) REFERENCES job_offers(id) ON DELETE CASCADE
+Triggers:
+    update_job_offers_updated_at BEFORE UPDATE ON job_offers FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+
+
+
+
+TABLE: newsletter_subscribers
+                             Table "public.newsletter_subscribers"
+     Column      |            Type             | Collation | Nullable |         Default         
+-----------------+-----------------------------+-----------+----------+-------------------------
+ id              | uuid                        |           | not null | uuid_generate_v4()
+ email           | character varying(255)      |           | not null | 
+ first_name      | character varying(100)      |           |          | 
+ last_name       | character varying(100)      |           |          | 
+ language        | character varying(5)        |           |          | 'fr'::character varying
+ is_active       | boolean                     |           |          | true
+ confirmed_at    | timestamp without time zone |           |          | 
+ subscribed_at   | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ unsubscribed_at | timestamp without time zone |           |          | 
+Indexes:
+    "newsletter_subscribers_pkey" PRIMARY KEY, btree (id)
+    "idx_newsletter_subscribers_active" btree (is_active)
+    "newsletter_subscribers_email_key" UNIQUE CONSTRAINT, btree (email)
+Check constraints:
+    "newsletter_subscribers_language_check" CHECK (language::text = ANY (ARRAY['fr'::character varying, 'en'::character varying]::text[]))
+
+
+
+
+TABLE: site_content
+                                  Table "public.site_content"
+    Column    |            Type             | Collation | Nullable |          Default          
+--------------+-----------------------------+-----------+----------+---------------------------
+ id           | uuid                        |           | not null | uuid_generate_v4()
+ section      | character varying(100)      |           | not null | 
+ key          | character varying(100)      |           | not null | 
+ value_fr     | text                        |           |          | 
+ value_en     | text                        |           |          | 
+ content_type | character varying(50)       |           |          | 'text'::character varying
+ updated_by   | uuid                        |           |          | 
+ updated_at   | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "site_content_pkey" PRIMARY KEY, btree (id)
+    "site_content_section_key_key" UNIQUE CONSTRAINT, btree (section, key)
+Check constraints:
+    "site_content_content_type_check" CHECK (content_type::text = ANY (ARRAY['text'::character varying, 'html'::character varying, 'image'::character varying, 'url'::character varying]::text[]))
+Foreign-key constraints:
+    "site_content_updated_by_fkey" FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+Triggers:
+    update_site_content_updated_at BEFORE UPDATE ON site_content FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+
+
+
+
+TABLE: users
+                                  Table "public.users"
+    Column     |            Type             | Collation | Nullable |      Default       
+---------------+-----------------------------+-----------+----------+--------------------
+ id            | uuid                        |           | not null | uuid_generate_v4()
+ username      | character varying(50)       |           | not null | 
+ email         | character varying(255)      |           | not null | 
+ password_hash | character varying(255)      |           | not null | 
+ role          | text[]                      |           | not null | 
+ first_name    | character varying(100)      |           |          | 
+ last_name     | character varying(100)      |           |          | 
+ is_active     | boolean                     |           |          | true
+ created_at    | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ updated_at    | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ last_login    | timestamp without time zone |           |          | 
+Indexes:
+    "users_pkey" PRIMARY KEY, btree (id)
+    "users_email_key" UNIQUE CONSTRAINT, btree (email)
+    "users_username_key" UNIQUE CONSTRAINT, btree (username)
+Check constraints:
+    "users_roles_check" CHECK (role <@ ARRAY['admin'::text, 'blogadmin'::text, 'careeradmin'::text, 'contentadmin'::text])
+Referenced by:
+    TABLE "activity_logs" CONSTRAINT "activity_logs_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "blog_posts" CONSTRAINT "blog_posts_author_id_fkey" FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "job_applications" CONSTRAINT "job_applications_reviewed_by_fkey" FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "job_offers" CONSTRAINT "job_offers_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "site_content" CONSTRAINT "site_content_updated_by_fkey" FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+Triggers:
+    update_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+
+
+
