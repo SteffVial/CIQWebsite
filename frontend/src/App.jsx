@@ -6,13 +6,13 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 
 // Import des pages (à créer)
-//import AdminLayout from './components/layout/AdminLayout';
-//import PublicLayout from './components/layout/PublicLayout';
-//import LoginPage from './pages/auth/LoginPage';
-//import DashboardPage from './pages/admin/DashboardPage';
+import AdminLayout from './components/layout/AdminLayout';
+import PublicLayout from './components/layout/PublicLayout';
+import LoginPage from './pages/LoginPage';
+import DashboardPage from './pages/DashboardPage';
 
 // Pages publiques (à créer)
-//import HomePage from './pages/public/HomePage';
+import HomePage from './pages/HomePage';
 
 // Configuration TanStack Query
 const queryClient = new QueryClient({

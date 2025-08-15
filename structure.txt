@@ -140,24 +140,29 @@ Triggers:
 
 
 TABLE: newsletter_subscribers
-                             Table "public.newsletter_subscribers"
-     Column      |            Type             | Collation | Nullable |         Default         
------------------+-----------------------------+-----------+----------+-------------------------
- id              | uuid                        |           | not null | uuid_generate_v4()
- email           | character varying(255)      |           | not null | 
- first_name      | character varying(100)      |           |          | 
- last_name       | character varying(100)      |           |          | 
- language        | character varying(5)        |           |          | 'fr'::character varying
- is_active       | boolean                     |           |          | true
- confirmed_at    | timestamp without time zone |           |          | 
- subscribed_at   | timestamp without time zone |           |          | CURRENT_TIMESTAMP
- unsubscribed_at | timestamp without time zone |           |          | 
+                              Table "public.newsletter_subscribers"
+      Column       |            Type             | Collation | Nullable |         Default         
+-------------------+-----------------------------+-----------+----------+-------------------------
+ id                | uuid                        |           | not null | uuid_generate_v4()
+ email             | character varying(255)      |           | not null | 
+ first_name        | character varying(100)      |           |          | 
+ last_name         | character varying(100)      |           |          | 
+ language          | character varying(5)        |           |          | 'fr'::character varying
+ is_active         | boolean                     |           |          | true
+ confirmed_at      | timestamp without time zone |           |          | 
+ subscribed_at     | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ unsubscribed_at   | timestamp without time zone |           |          | 
+ unsubscribe_token | character varying(64)       |           | not null | 
 Indexes:
     "newsletter_subscribers_pkey" PRIMARY KEY, btree (id)
     "idx_newsletter_subscribers_active" btree (is_active)
+    "idx_newsletter_unsubscribe_token" btree (unsubscribe_token)
     "newsletter_subscribers_email_key" UNIQUE CONSTRAINT, btree (email)
+    "newsletter_subscribers_unsubscribe_token_key" UNIQUE CONSTRAINT, btree (unsubscribe_token)
 Check constraints:
     "newsletter_subscribers_language_check" CHECK (language::text = ANY (ARRAY['fr'::character varying, 'en'::character varying]::text[]))
+Triggers:
+    newsletter_generate_token BEFORE INSERT ON newsletter_subscribers FOR EACH ROW EXECUTE FUNCTION generate_unsubscribe_token()
 
 
 
