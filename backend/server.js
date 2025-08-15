@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.js';
 import blogRoutes from './routes/blog.js';
 import jobRoutes from './routes/jobs.js';
+import newsletterRoutes from './routes/newsletter.js';
 // import contentRoutes from './routes/content.js';
 
 // Configuration
@@ -43,6 +44,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/blog', blogRoutes);
 app.use('/api/jobs', jobRoutes);
+app.use('/api/newsletter', newsletterRoutes);
 // app.use('/api/content', contentRoutes);
 
 // Route test database connection
