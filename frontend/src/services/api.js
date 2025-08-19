@@ -74,23 +74,27 @@ export const hasRole = (userRoles, requiredRole) => {
   return userRoles?.includes(requiredRole) || userRoles?.includes('admin');
 };
 
+
+
 // ==================== SERVICES AUTH ====================
 export const authService = {
   // Connexion
   login: async (credentials) => {
-    try {
-      const response = await api.post('/auth/login', credentials);
-      const { token, user } = response.data;
-      
-      Cookies.set('auth_token', token, { expires: 7, secure: true, sameSite: 'lax' });
-      Cookies.set('user', JSON.stringify(user), { expires: 7, secure: true, sameSite: 'lax' });
-      
-      toast.success(`Bienvenue ${user.username}!`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
+  try {
+    const response = await api.post('/auth/login', credentials);
+    
+    // ✅ CORRECTION : Adaptez à la structure de votre backend
+    const { user, accessToken } = response.data.data; // Notez le .data.data
+    
+    Cookies.set('auth_token', accessToken, { expires: 7, secure: true, sameSite: 'lax' });
+    Cookies.set('user', JSON.stringify(user), { expires: 7, secure: true, sameSite: 'lax' });
+    
+    toast.success(`Bienvenue ${user.username}!`);
+    return { user, token: accessToken }; // Format attendu par le frontend
+  } catch (error) {
+    throw error;
+  }
+},
 
   // Déconnexion
   logout: async () => {
@@ -168,7 +172,173 @@ export const blogService = {
   getCategories: async () => {
     const response = await api.get('/blog/categories');
     return response.data;
-  }
+  },
+
+  // Changer le statut d'un article
+  updateArticleStatus: async (id, status) => {
+    const response = await api.put(`/blog/articles/${id}/status`, { status });
+    toast.success(`Article ${status === 'published' ? 'publié' : 'mis à jour'}`);
+    return response.data;
+  },
+
+  // Soumettre un article pour révision
+  submitForReview: async (id, reviewData = {}) => {
+    const response = await api.post(`/blog/articles/${id}/submit-review`, reviewData);
+    toast.success('Article soumis pour révision');
+    return response.data;
+  },
+
+  // Approuver/rejeter un article (admin seulement)
+  reviewArticle: async (id, reviewData) => {
+    const response = await api.post(`/blog/articles/${id}/review`, {
+      status: reviewData.status, // 'approved' ou 'rejected'
+      comments: reviewData.comments
+    });
+    toast.success(`Article ${reviewData.status === 'approved' ? 'approuvé' : 'rejeté'}`);
+    return response.data;
+  },
+
+  // Programmer la publication d'un article
+  scheduleArticle: async (id, scheduledAt) => {
+    const response = await api.put(`/blog/articles/${id}/schedule`, { 
+      scheduledAt,
+      status: 'scheduled'
+    });
+    toast.success('Article programmé pour publication');
+    return response.data;
+  },
+
+
+  // Récupérer l'historique des versions d'un article
+  getArticleVersions: async (id) => {
+    const response = await api.get(`/blog/articles/${id}/versions`);
+    return response.data;
+  },
+
+  // Créer une nouvelle version (sauvegarde automatique)
+  createVersion: async (id, versionData) => {
+    const response = await api.post(`/blog/articles/${id}/versions`, {
+      blocks: versionData.blocks,
+      title: versionData.title,
+      excerpt: versionData.excerpt,
+      seo: versionData.seo,
+      metadata: {
+        savedAt: new Date().toISOString(),
+        autoSave: versionData.autoSave || false
+      }
+    });
+    return response.data;
+  },
+
+  // Restaurer une version spécifique
+  restoreVersion: async (id, versionId) => {
+    const response = await api.post(`/blog/articles/${id}/restore/${versionId}`);
+    toast.success('Version restaurée avec succès');
+    return response.data;
+  },
+
+  // Comparer deux versions
+  compareVersions: async (id, versionA, versionB) => {
+    const response = await api.get(`/blog/articles/${id}/compare/${versionA}/${versionB}`);
+    return response.data;
+  },
+
+
+  // Sauvegarder les blocs d'un article (structure JSON)
+  updateArticleBlocks: async (id, blocks) => {
+    const response = await api.put(`/blog/articles/${id}/blocks`, { 
+      blocks: blocks.map((block, index) => ({
+        ...block,
+        order: index // S'assurer que l'ordre est correct
+      }))
+    });
+    return response.data;
+  },
+
+  // Sauvegarder automatiquement (toutes les X secondes)
+  autoSaveArticle: async (id, articleData) => {
+    try {
+      const response = await api.post(`/blog/articles/${id}/autosave`, {
+        ...articleData,
+        metadata: {
+          autoSave: true,
+          savedAt: new Date().toISOString()
+        }
+      });
+      return response.data;
+    } catch (error) {
+      // Pas de toast pour l'auto-save en cas d'erreur
+      console.warn('Auto-save failed:', error);
+      throw error;
+    }
+  },
+
+  // Récupérer les brouillons auto-sauvegardés
+  getAutoSavedDraft: async (id) => {
+    const response = await api.get(`/blog/articles/${id}/autosave`);
+    return response.data;
+  },
+
+
+
+  // Upload d'image optimisée pour les blocs
+  uploadBlockImage: async (file, blockId) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('blockId', blockId);
+    formData.append('context', 'block'); // Pour différencier des autres uploads
+
+    const response = await api.post('/blog/upload-block-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: (progressEvent) => {
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        // Vous pouvez émettre un événement ici pour la progress bar
+        window.dispatchEvent(new CustomEvent('uploadProgress', {
+          detail: { blockId, progress: percentCompleted }
+        }));
+      }
+    });
+
+    toast.success('Image uploadée avec succès');
+    return response.data;
+  },
+
+  // Upload de fichier pour les blocs (PDF, documents, etc.)
+  uploadBlockFile: async (file, blockId, blockType = 'file') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('blockId', blockId);
+    formData.append('blockType', blockType);
+
+    const response = await api.post('/blog/upload-block-file', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+
+    toast.success('Fichier uploadé avec succès');
+    return response.data;
+  },
+
+  // Recherche d'articles avec filtres étendus
+  searchArticles: async (params) => {
+    const response = await api.get('/blog/articles/search', { 
+      params: {
+        q: params.query,
+        status: params.status,
+        author: params.author,
+        category: params.category,
+        tags: params.tags,
+        dateFrom: params.dateFrom,
+        dateTo: params.dateTo,
+        hasBlocks: params.hasBlocks, // Articles avec certains types de blocs
+        sortBy: params.sortBy || 'updatedAt',
+        sortOrder: params.sortOrder || 'desc',
+        page: params.page || 1,
+        limit: params.limit || 20
+      }
+    });
+    return response.data;
+  },
+
 };
 
 // ==================== SERVICES CARRIÈRES ====================
@@ -223,8 +393,59 @@ export const jobService = {
     });
     toast.success('Candidature envoyée avec succès');
     return response.data;
+  },
+
+  // Statistiques d'un article
+  getArticleStats: async (id) => {
+    const response = await api.get(`/blog/articles/${id}/stats`);
+    return response.data;
+  },
+
+  // Mettre à jour les vues d'un article
+  incrementViews: async (id) => {
+    const response = await api.post(`/blog/articles/${id}/view`);
+    return response.data;
+  },
+
+  // Ajouter un commentaire de révision
+  addReviewComment: async (id, comment) => {
+    const response = await api.post(`/blog/articles/${id}/comments`, {
+      content: comment.content,
+      blockId: comment.blockId, // Commentaire sur un bloc spécifique
+      type: comment.type || 'review'
+    });
+    return response.data;
+  },
+
+  // Récupérer les commentaires d'un article
+  getArticleComments: async (id) => {
+    const response = await api.get(`/blog/articles/${id}/comments`);
+    return response.data;
+  },
+
+  // Marquer un commentaire comme résolu
+  resolveComment: async (id, commentId) => {
+    const response = await api.put(`/blog/articles/${id}/comments/${commentId}/resolve`);
+    return response.data;
   }
+
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // ==================== SERVICES NEWSLETTER ====================
 export const newsletterService = {
@@ -294,19 +515,19 @@ export const dashboardService = {
   // Récupérer les statistiques du dashboard
   getStats: async () => {
     const response = await api.get('/dashboard/stats');
-    return response.data;
+    return response.data.data; // ✅ Ajoutez .data pour adapter à votre structure backend
   },
 
   // Récupérer les activités récentes
   getRecentActivity: async (limit = 10) => {
     const response = await api.get(`/dashboard/activity?limit=${limit}`);
-    return response.data;
+    return response.data.data; // ✅ Ajoutez .data pour adapter à votre structure backend
   },
 
   // Récupérer les analyses
   getAnalytics: async (period = '30d') => {
     const response = await api.get(`/dashboard/analytics?period=${period}`);
-    return response.data;
+    return response.data.data; // ✅ Ajoutez .data pour adapter à votre structure backend
   }
 };
 
@@ -335,7 +556,87 @@ export const queryKeys = {
   // Dashboard
   stats: ['dashboard', 'stats'],
   activity: (limit) => ['dashboard', 'activity', limit],
-  analytics: (period) => ['dashboard', 'analytics', period]
+  analytics: (period) => ['dashboard', 'analytics', period],
+
+  // Blog - nouvelles clés pour les fonctionnalités avancées
+  articleVersions: (id) => ['blog', 'article', id, 'versions'],
+  articleComments: (id) => ['blog', 'article', id, 'comments'],
+  articleStats: (id) => ['blog', 'article', id, 'stats'],
+  autoSavedDraft: (id) => ['blog', 'article', id, 'autosave'],
+  
+  // Recherche avancée
+  searchArticles: (params) => ['blog', 'search', params],
+  
+  // Filtres par statut
+  articlesByStatus: (status) => ['blog', 'articles', 'status', status],
+  articlesForReview: ['blog', 'articles', 'pending-review'],
+};
+
+
+
+
+
+
+// Helper pour valider la structure des blocs côté client
+export const validateBlockStructure = (blocks) => {
+  if (!Array.isArray(blocks)) return false;
+  
+  return blocks.every(block => {
+    return (
+      block.id &&
+      block.type &&
+      typeof block.order === 'number' &&
+      block.content !== undefined
+    );
+  });
+};
+
+// Helper pour nettoyer les blocs avant envoi
+export const sanitizeBlocks = (blocks) => {
+  return blocks.map((block, index) => ({
+    ...block,
+    order: index,
+    // Retirer les propriétés temporaires côté client
+    _isSelected: undefined,
+    _isDragging: undefined,
+    _tempId: undefined
+  })).filter(block => block.type && block.content !== undefined);
+};
+
+// Helper pour calculer la taille estimée de l'article
+export const calculateArticleSize = (blocks) => {
+  let totalSize = 0;
+  
+  blocks.forEach(block => {
+    // Taille du texte
+    if (block.content.text) {
+      totalSize += new Blob([block.content.text]).size;
+    }
+    
+    // Estimation pour les images (basée sur l'URL)
+    if (block.content.src && block.metadata?.size) {
+      totalSize += block.metadata.size;
+    }
+  });
+  
+  return totalSize;
+};
+
+// ==================== WEBSOCKET POUR COLLABORATION (optionnel) ====================
+
+// Si vous voulez ajouter la collaboration en temps réel plus tard
+export const blogCollaboration = {
+  // Rejoindre une session d'édition
+  joinEditSession: async (articleId) => {
+    // Implementation WebSocket future
+    console.log(`Joining edit session for article ${articleId}`);
+  },
+  
+  // Quitter une session d'édition  
+  leaveEditSession: async (articleId) => {
+    // Implementation WebSocket future
+    console.log(`Leaving edit session for article ${articleId}`);
+  }
 };
 
 export default api;

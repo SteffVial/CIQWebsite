@@ -10,6 +10,7 @@ import blogRoutes from './routes/blog.js';
 import jobRoutes from './routes/jobs.js';
 import newsletterRoutes from './routes/newsletter.js';
 import contentRoutes from './routes/content.js';
+import dashboardRoutes from './routes/dashboard.js';
 
 // Configuration
 dotenv.config();
@@ -18,6 +19,10 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+//const dashboardRoutes = require('./routes/dashboard');
+
+
 
 // Middleware
 app.use(cors({
@@ -46,6 +51,7 @@ app.use('/api/blog', blogRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/newsletter', newsletterRoutes);
 app.use('/api/content', contentRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Route test database connection
 app.get('/api/health', async (req, res) => {

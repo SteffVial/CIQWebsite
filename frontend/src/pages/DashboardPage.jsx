@@ -173,13 +173,13 @@ const DashboardPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 font-medium">{card.title}</p>
-                <p className="text-3xl font-bold text-gray-900 mt-1">
+                <div className="text-3xl font-bold text-gray-900 mt-1">
                   {statsLoading ? (
                     <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
                   ) : (
                     formatNumber(card.value)
                   )}
-                </p>
+                </div>
                 <div className="flex items-center mt-2 text-sm">
                   <ArrowTrendingUpIcon className="h-4 w-4 text-green-500 mr-1" />
                   <span className="text-green-600">{card.change}</span>

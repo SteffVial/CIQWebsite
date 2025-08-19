@@ -4,6 +4,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
+import BlogListPage from './pages/BlogListPage.jsx';
+
+
+// Ces pages seront créées dans les prochaines étapes :
+import BlogEditorPage from './pages/BlogEditorPage.jsx';
+// import BlogPreviewPage from './pages/BlogPreviewPage.jsx';
 
 // Import des pages (à créer)
 import AdminLayout from './components/layout/AdminLayout';
@@ -44,6 +50,15 @@ function App() {
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="dashboard" element={<DashboardPage />} />
+                {/* ========== NOUVELLES ROUTES BLOG ========== */}
+              {/* Route principale du blog admin */}
+              <Route path="blog" element={<BlogListPage />} />
+              {/* Création d'un nouvel article */}
+              <Route path="blog/new" element={<BlogEditorPage />} />
+              
+              {/* Édition d'un article existant */}
+              <Route path="blog/edit/:id" element={<BlogEditorPage />} />
+                            
               </Route>
 
               {/* Route par défaut */}
