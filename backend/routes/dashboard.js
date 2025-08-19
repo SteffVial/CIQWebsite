@@ -1,11 +1,11 @@
-// backend/routes/dashboard.js - VERSION ES MODULES
+// backend/routes/dashboard.js - VERSION CORRIGÉE
 import express from 'express';
-import { authenticateToken, requireRoles } from '../middleware/auth.js';
+import { authenticateToken, requireRole } from '../middleware/auth.js'; // ✅ requireRole au lieu de requireRoles
 
 const router = express.Router();
 
 // GET /api/dashboard/stats
-router.get('/stats', authenticateToken, requireRoles(['admin']), async (req, res) => {
+router.get('/stats', authenticateToken, requireRole(['admin']), async (req, res) => {
   try {
     // Simuler des stats pour l'instant
     const stats = {
@@ -27,7 +27,7 @@ router.get('/stats', authenticateToken, requireRoles(['admin']), async (req, res
 });
 
 // GET /api/dashboard/activity
-router.get('/activity', authenticateToken, requireRoles(['admin']), async (req, res) => {
+router.get('/activity', authenticateToken, requireRole(['admin']), async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 10;
     
@@ -67,7 +67,7 @@ router.get('/activity', authenticateToken, requireRoles(['admin']), async (req, 
 });
 
 // GET /api/dashboard/analytics
-router.get('/analytics', authenticateToken, requireRoles(['admin']), async (req, res) => {
+router.get('/analytics', authenticateToken, requireRole(['admin']), async (req, res) => {
   try {
     const period = req.query.period || '30d';
     
