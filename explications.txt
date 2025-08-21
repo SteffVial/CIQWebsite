@@ -1,0 +1,19 @@
+projet de refonte d'un site web static
+j'ai deja debuté la refonte dans un autre chat 
+
+prendre conaissance des fichiers
+structure.txt pour les information sur la base de données
+frontendStructure.txt pour les information sur le frontend
+backendStructure.txt pour les information sur le backend
+
+
+Je veux refaire la refonte d'un site web existant
+en plus du contenu, il y aura une section admin pour faire la gestion des blogs, newsletter et site carrière
+Il y a une base de données postgresSQL pour stocker les infomations donc il faut s'assurer que la majortié du contenu soit dans la BDD
+
+c'est un site bilingue et il faut penser à une version mobile aussi
+
+pour le moment la majorité de la structure backend est developpé et testé 
+
+Le frontend à débuté mais il y a encore des ajustements 
+

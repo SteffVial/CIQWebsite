@@ -30,40 +30,77 @@ const ParagraphBlock = ({ block, isSelected, onUpdate, onSelect, onFocus }) => {
   };
 
   const handleInput = (e) => {
-    const text = e.target.textContent;
-    onUpdate({
-      content: {
-        ...block.content,
-        text: text
+  let text = e.target.textContent;
+  
+  // 🔧 CORRECTION : Détecter et corriger le texte à l'envers
+  if (text && text.length > 0) {
+    // Forcer la mise à jour immédiate du DOM
+    setTimeout(() => {
+      if (e.target.textContent !== text) {
+        e.target.textContent = text;
+        
+        // Repositionner le curseur
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(e.target);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
       }
-    });
-  };
+    }, 5);
+  }
+  
+  onUpdate({
+    content: {
+      ...block.content,
+      text: text
+    }
+  });
+};
 
   const handleKeyDown = (e) => {
-    // Gestion des raccourcis clavier
-    if (e.ctrlKey || e.metaKey) {
-      switch (e.key) {
-        case 'b':
-          e.preventDefault();
-          toggleFormat('bold');
-          break;
-        case 'i':
-          e.preventDefault();
-          toggleFormat('italic');
-          break;
-        case 'u':
-          e.preventDefault();
-          toggleFormat('underline');
-          break;
-      }
+  // Gestion des raccourcis clavier
+  if (e.ctrlKey || e.metaKey) {
+    switch (e.key) {
+      case 'b':
+        e.preventDefault();
+        toggleFormat('bold');
+        break;
+      case 'i':
+        e.preventDefault();
+        toggleFormat('italic');
+        break;
+      case 'u':
+        e.preventDefault();
+        toggleFormat('underline');
+        break;
     }
+  }
 
-    // Empêcher les sauts de ligne multiples
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      // Optionnel : créer un nouveau bloc paragraphe
+  // Empêcher les sauts de ligne multiples
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    // Optionnel : créer un nouveau bloc paragraphe
+  }
+
+  // 🔧 NOUVEAU : Forcer la direction après chaque frappe
+  setTimeout(() => {
+    const element = e.target;
+    if (element) {
+      const content = element.textContent;
+      // Réappliquer le contenu pour forcer la direction
+      element.textContent = content;
+      
+      // Repositionner le curseur à la fin
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
     }
-  };
+  }, 10);
+};
 
   const toggleFormat = (format) => {
     document.execCommand(format, false, null);
@@ -93,6 +130,14 @@ const ParagraphBlock = ({ block, isSelected, onUpdate, onSelect, onFocus }) => {
     document.addEventListener('selectionchange', handleSelectionChange);
     return () => document.removeEventListener('selectionchange', handleSelectionChange);
   }, [isEditing]);
+
+  useEffect(() => {
+  if (textRef.current && block.content.text !== textRef.current.textContent) {
+    textRef.current.textContent = block.content.text || '';
+  }
+}, [block.content.text]);
+
+
 
   const insertLink = () => {
     const url = prompt('Entrez l\'URL du lien:');
@@ -225,9 +270,9 @@ const ParagraphBlock = ({ block, isSelected, onUpdate, onSelect, onFocus }) => {
         onBlur={handleBlur}
         onInput={handleInput}
         onKeyDown={handleKeyDown}
-        dangerouslySetInnerHTML={{
-          __html: block.content.text || ''
-        }}
+        //dangerouslySetInnerHTML={{
+        //  __html: block.content.text || ''
+        //}}
         data-placeholder={!block.content.text ? 'Tapez votre texte ici...' : undefined}
       />
 

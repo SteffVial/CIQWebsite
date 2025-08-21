@@ -32,20 +32,38 @@ const HeadingBlock = ({ block, isSelected, onUpdate, onSelect, onFocus }) => {
   };
 
   const handleKeyDown = (e) => {
-    // Empêcher les sauts de ligne dans les titres
-    if (e.key === 'Enter') {
-      e.preventDefault();
-    }
+  // Empêcher les sauts de ligne dans les titres
+  if (e.key === 'Enter') {
+    e.preventDefault();
+  }
 
-    // Raccourcis pour changer le niveau
-    if (e.ctrlKey || e.metaKey) {
-      const num = parseInt(e.key);
-      if (num >= 1 && num <= 6) {
-        e.preventDefault();
-        updateLevel(num);
-      }
+  // 🔧 NOUVEAU : Forcer la direction après chaque frappe
+  setTimeout(() => {
+    const element = e.target;
+    if (element) {
+      const content = element.textContent;
+      // Réappliquer le contenu pour forcer la direction
+      element.textContent = content;
+      
+      // Repositionner le curseur à la fin
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
     }
-  };
+  }, 10);
+
+  // Raccourcis pour changer le niveau (reste inchangé)
+  if (e.ctrlKey || e.metaKey) {
+    const num = parseInt(e.key);
+    if (num >= 1 && num <= 6) {
+      e.preventDefault();
+      updateLevel(num);
+    }
+  }
+};
 
   const updateLevel = (level) => {
     onUpdate({

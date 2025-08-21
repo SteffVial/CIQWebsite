@@ -22,6 +22,73 @@ Foreign-key constraints:
 
 
 
+TABLE: article_tags
+            Table "public.article_tags"
+   Column   | Type | Collation | Nullable | Default 
+------------+------+-----------+----------+---------
+ article_id | uuid |           | not null | 
+ tag_id     | uuid |           | not null | 
+Indexes:
+    "article_tags_pkey" PRIMARY KEY, btree (article_id, tag_id)
+Foreign-key constraints:
+    "article_tags_article_id_fkey" FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+    "article_tags_tag_id_fkey" FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+
+
+
+
+TABLE: article_views
+                            Table "public.article_views"
+   Column   |            Type             | Collation | Nullable |      Default      
+------------+-----------------------------+-----------+----------+-------------------
+ id         | uuid                        |           | not null | gen_random_uuid()
+ article_id | uuid                        |           |          | 
+ user_id    | uuid                        |           |          | 
+ ip_address | inet                        |           |          | 
+ viewed_at  | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "article_views_pkey" PRIMARY KEY, btree (id)
+    "idx_article_views_article" btree (article_id)
+Foreign-key constraints:
+    "article_views_article_id_fkey" FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+    "article_views_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+
+
+
+
+TABLE: articles
+                                    Table "public.articles"
+    Column    |            Type             | Collation | Nullable |          Default           
+--------------+-----------------------------+-----------+----------+----------------------------
+ id           | uuid                        |           | not null | gen_random_uuid()
+ title        | character varying(500)      |           | not null | 
+ slug         | character varying(500)      |           | not null | 
+ excerpt      | text                        |           |          | 
+ blocks       | jsonb                       |           |          | '[]'::jsonb
+ status       | character varying(50)       |           |          | 'draft'::character varying
+ author_id    | uuid                        |           |          | 
+ category_id  | uuid                        |           |          | 
+ seo          | jsonb                       |           |          | '{}'::jsonb
+ published_at | timestamp without time zone |           |          | 
+ scheduled_at | timestamp without time zone |           |          | 
+ created_at   | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ updated_at   | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "articles_pkey" PRIMARY KEY, btree (id)
+    "articles_slug_key" UNIQUE CONSTRAINT, btree (slug)
+    "idx_articles_author" btree (author_id)
+    "idx_articles_published_at" btree (published_at)
+    "idx_articles_status" btree (status)
+Foreign-key constraints:
+    "articles_author_id_fkey" FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE SET NULL
+    "articles_category_id_fkey" FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
+Referenced by:
+    TABLE "article_tags" CONSTRAINT "article_tags_article_id_fkey" FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+    TABLE "article_views" CONSTRAINT "article_views_article_id_fkey" FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+
+
+
+
 TABLE: blog_posts
                                      Table "public.blog_posts"
       Column      |            Type             | Collation | Nullable |          Default           
@@ -55,6 +122,26 @@ Foreign-key constraints:
     "blog_posts_author_id_fkey" FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE SET NULL
 Triggers:
     update_blog_posts_updated_at BEFORE UPDATE ON blog_posts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+
+
+
+
+TABLE: categories
+                              Table "public.categories"
+   Column    |            Type             | Collation | Nullable |      Default      
+-------------+-----------------------------+-----------+----------+-------------------
+ id          | uuid                        |           | not null | gen_random_uuid()
+ name        | character varying(255)      |           | not null | 
+ slug        | character varying(255)      |           | not null | 
+ description | text                        |           |          | 
+ created_at  | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ updated_at  | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "categories_pkey" PRIMARY KEY, btree (id)
+    "categories_name_key" UNIQUE CONSTRAINT, btree (name)
+    "categories_slug_key" UNIQUE CONSTRAINT, btree (slug)
+Referenced by:
+    TABLE "articles" CONSTRAINT "articles_category_id_fkey" FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
 
 
 
@@ -192,6 +279,24 @@ Triggers:
 
 
 
+TABLE: tags
+                                 Table "public.tags"
+   Column   |            Type             | Collation | Nullable |      Default      
+------------+-----------------------------+-----------+----------+-------------------
+ id         | uuid                        |           | not null | gen_random_uuid()
+ name       | character varying(255)      |           | not null | 
+ slug       | character varying(255)      |           | not null | 
+ created_at | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "tags_pkey" PRIMARY KEY, btree (id)
+    "tags_name_key" UNIQUE CONSTRAINT, btree (name)
+    "tags_slug_key" UNIQUE CONSTRAINT, btree (slug)
+Referenced by:
+    TABLE "article_tags" CONSTRAINT "article_tags_tag_id_fkey" FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+
+
+
+
 TABLE: users
                                   Table "public.users"
     Column     |            Type             | Collation | Nullable |      Default       
@@ -215,6 +320,8 @@ Check constraints:
     "users_roles_check" CHECK (role <@ ARRAY['admin'::text, 'blogadmin'::text, 'careeradmin'::text, 'contentadmin'::text])
 Referenced by:
     TABLE "activity_logs" CONSTRAINT "activity_logs_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "article_views" CONSTRAINT "article_views_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "articles" CONSTRAINT "articles_author_id_fkey" FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE SET NULL
     TABLE "blog_posts" CONSTRAINT "blog_posts_author_id_fkey" FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE SET NULL
     TABLE "job_applications" CONSTRAINT "job_applications_reviewed_by_fkey" FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
     TABLE "job_offers" CONSTRAINT "job_offers_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL

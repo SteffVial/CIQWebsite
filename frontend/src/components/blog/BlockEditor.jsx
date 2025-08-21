@@ -29,6 +29,8 @@ const BlockEditor = ({
   const [dropPosition, setDropPosition] = useState(null);
   const [showAddMenu, setShowAddMenu] = useState(null);
   const dragCounter = useRef(0);
+  const [showActionsMenu, setShowActionsMenu] = useState(null);
+
 
   // Types de blocs disponibles pour le menu d'ajout
   const blockTypes = [
@@ -61,12 +63,12 @@ const BlockEditor = ({
   const handleDragEnter = (e, targetBlockId) => {
     e.preventDefault();
     dragCounter.current++;
-    
+
     if (draggedBlockId && draggedBlockId !== targetBlockId) {
       const rect = e.currentTarget.getBoundingClientRect();
       const midPoint = rect.top + rect.height / 2;
       const position = e.clientY < midPoint ? 'before' : 'after';
-      
+
       setDropPosition({ blockId: targetBlockId, position });
     }
   };
@@ -81,7 +83,7 @@ const BlockEditor = ({
   const handleDrop = (e, targetBlockId) => {
     e.preventDefault();
     dragCounter.current = 0;
-    
+
     if (!draggedBlockId || draggedBlockId === targetBlockId) {
       setDropPosition(null);
       return;
@@ -89,12 +91,12 @@ const BlockEditor = ({
 
     const sourceIndex = blocks.findIndex(block => block.id === draggedBlockId);
     const targetIndex = blocks.findIndex(block => block.id === targetBlockId);
-    
+
     if (sourceIndex === -1 || targetIndex === -1) return;
 
     const newBlocks = [...blocks];
     const [movedBlock] = newBlocks.splice(sourceIndex, 1);
-    
+
     let insertIndex = targetIndex;
     if (sourceIndex < targetIndex) {
       insertIndex = targetIndex;
@@ -102,7 +104,7 @@ const BlockEditor = ({
     if (dropPosition?.position === 'after') {
       insertIndex += 1;
     }
-    
+
     newBlocks.splice(insertIndex, 0, movedBlock);
     onBlocksChange(newBlocks);
     setDropPosition(null);
@@ -110,8 +112,8 @@ const BlockEditor = ({
 
   // Mise à jour d'un bloc spécifique
   const updateBlock = useCallback((blockId, updates) => {
-    const newBlocks = blocks.map(block => 
-      block.id === blockId 
+    const newBlocks = blocks.map(block =>
+      block.id === blockId
         ? { ...block, ...updates, updatedAt: new Date().toISOString() }
         : block
     );
@@ -161,15 +163,13 @@ const BlockEditor = ({
 
           {/* Conteneur de bloc */}
           <div
-            className={`relative transition-all duration-200 ${
-              selectedBlockId === block.id 
-                ? 'ring-2 ring-cyner-blue ring-opacity-50' 
+            className={`relative transition-all duration-200 ${selectedBlockId === block.id
+              ? 'ring-2 ring-cyner-blue ring-opacity-50'
+              : ''
+              } ${draggedBlockId === block.id
+                ? 'opacity-50 transform scale-105'
                 : ''
-            } ${
-              draggedBlockId === block.id 
-                ? 'opacity-50 transform scale-105' 
-                : ''
-            }`}
+              }`}
             draggable
             onDragStart={(e) => handleDragStart(e, block.id)}
             onDragEnd={handleDragEnd}
@@ -180,11 +180,10 @@ const BlockEditor = ({
             onClick={() => onSelectBlock(block.id)}
           >
             {/* Toolbar de bloc */}
-            <div className={`absolute left-0 top-0 transform -translate-x-full flex items-center space-x-1 transition-opacity duration-200 ${
-              selectedBlockId === block.id || showAddMenu === block.id 
-                ? 'opacity-100' 
-                : 'opacity-0 group-hover:opacity-100'
-            }`}>
+            <div className={`absolute left-0 top-0 transform -translate-x-full flex items-center space-x-1 transition-opacity duration-200 ${selectedBlockId === block.id || showAddMenu === block.id
+              ? 'opacity-100'
+              : 'opacity-0 group-hover:opacity-100'
+              }`}>
               {/* Drag handle */}
               <button
                 className="p-1 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing"
@@ -208,45 +207,58 @@ const BlockEditor = ({
 
                 {/* Menu déroulant d'ajout */}
                 {showAddMenu === block.id && (
-                  <div className="absolute left-0 top-full mt-1 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                    <div className="p-2">
-                      <div className="text-xs font-medium text-gray-500 mb-2 px-2">
-                        Ajouter un bloc
+                  <>
+                    {/* Overlay pour fermer le menu */}
+                    <div
+                      className="fixed inset-0 z-[250]"
+                      onClick={() => setShowAddMenu(null)}
+                    />
+
+                    {/* Menu avec z-index élevé */}
+                    <div
+                      className="absolute left-0 top-full mt-1 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-[300]"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="p-2">
+                        <div className="text-xs font-medium text-gray-500 mb-2 px-2">
+                          Ajouter un bloc
+                        </div>
+                        {blockTypes.map((blockType) => (
+                          <button
+                            key={blockType.type}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onAddBlock(blockType.type, index);
+                              setShowAddMenu(null);
+                            }}
+                            className="w-full flex items-center space-x-3 px-2 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
+                          >
+                            <span className="w-8 h-8 bg-gray-100 rounded-md flex items-center justify-center text-sm">
+                              {blockType.icon}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-medium text-gray-900">
+                                {blockType.label}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {blockType.description}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
                       </div>
-                      {blockTypes.map((blockType) => (
-                        <button
-                          key={blockType.type}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onAddBlock(blockType.type, index);
-                            setShowAddMenu(null);
-                          }}
-                          className="w-full flex items-center space-x-3 px-2 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
-                        >
-                          <span className="w-8 h-8 bg-gray-100 rounded-md flex items-center justify-center text-sm">
-                            {blockType.icon}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium text-gray-900">
-                              {blockType.label}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {blockType.description}
-                            </div>
-                          </div>
-                        </button>
-                      ))}
                     </div>
-                  </div>
+                  </>
                 )}
               </div>
 
+              {/* Block actions menu */}
               {/* Block actions menu */}
               <div className="relative">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    // Toggle actions menu
+                    setShowActionsMenu(showActionsMenu === block.id ? null : block.id); // ✅ Ajoutez cette ligne
                   }}
                   className="p-1 text-gray-400 hover:text-gray-600"
                   title="Options du bloc"
@@ -254,33 +266,49 @@ const BlockEditor = ({
                   <EllipsisVerticalIcon className="h-4 w-4" />
                 </button>
 
-                {/* Actions menu - simplifié pour l'instant */}
-                <div className="hidden absolute left-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                  <div className="p-1">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDuplicateBlock(block.id);
-                      }}
-                      className="w-full flex items-center space-x-2 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
+                {/* Actions menu */}
+                {showActionsMenu === block.id && (
+                  <>
+                    {/* Overlay qui évite la zone du menu */}
+                    <div
+                      className="fixed inset-0 z-30"
+                      onClick={() => setShowActionsMenu(null)}
+                    />
+
+                    {/* Menu avec z-index plus élevé */}
+                    <div
+                      className="absolute left-0 bottom-full mb-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-[200]"
+                      onClick={(e) => e.stopPropagation()} // ✅ Empêche la propagation
                     >
-                      <DocumentDuplicateIcon className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm text-gray-700">Dupliquer</span>
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (window.confirm('Supprimer ce bloc ?')) {
-                          onDeleteBlock(block.id);
-                        }
-                      }}
-                      className="w-full flex items-center space-x-2 px-3 py-2 text-left hover:bg-red-50 rounded-md transition-colors"
-                    >
-                      <TrashIcon className="h-4 w-4 text-red-500" />
-                      <span className="text-sm text-red-700">Supprimer</span>
-                    </button>
-                  </div>
-                </div>
+                      <div className="p-1">
+                        <button
+                          onClick={() => {
+                            console.log('🔍 Bouton cliqué');
+                            onDuplicateBlock(block.id);
+                            setShowActionsMenu(null);
+                          }}
+                          className="w-full flex items-center space-x-2 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
+                        >
+                          <DocumentDuplicateIcon className="h-4 w-4 text-gray-500" />
+                          <span className="text-sm text-gray-700">Dupliquer</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            console.log('🔍 Bouton supprimer cliqué');
+                            if (window.confirm('Supprimer ce bloc ?')) {
+                              onDeleteBlock(block.id);
+                            }
+                            setShowActionsMenu(null);
+                          }}
+                          className="w-full flex items-center space-x-2 px-3 py-2 text-left hover:bg-red-50 rounded-md transition-colors"
+                        >
+                          <TrashIcon className="h-4 w-4 text-red-500" />
+                          <span className="text-sm text-red-700">Supprimer</span>
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -297,13 +325,7 @@ const BlockEditor = ({
         </div>
       ))}
 
-      {/* Fermer les menus au clic extérieur */}
-      {showAddMenu && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setShowAddMenu(null)}
-        />
-      )}
+      
     </div>
   );
 };
