@@ -48,7 +48,7 @@ const ListBlock = ({ block, isSelected, onUpdate, onSelect, onFocus }) => {
       newItems.push('');
     }
     updateItems(newItems);
-    
+
     // Focus sur le nouvel item après mise à jour
     setTimeout(() => {
       const targetIndex = afterIndex >= 0 ? afterIndex + 1 : newItems.length - 1;
@@ -59,7 +59,7 @@ const ListBlock = ({ block, isSelected, onUpdate, onSelect, onFocus }) => {
 
   const removeItem = (index) => {
     if (block.content.items.length <= 1) return; // Garder au moins un item
-    
+
     const newItems = [...block.content.items];
     newItems.splice(index, 1);
     updateItems(newItems);
@@ -67,7 +67,7 @@ const ListBlock = ({ block, isSelected, onUpdate, onSelect, onFocus }) => {
 
   const moveItem = (fromIndex, toIndex) => {
     if (toIndex < 0 || toIndex >= block.content.items.length) return;
-    
+
     const newItems = [...block.content.items];
     const [movedItem] = newItems.splice(fromIndex, 1);
     newItems.splice(toIndex, 0, movedItem);
@@ -80,7 +80,7 @@ const ListBlock = ({ block, isSelected, onUpdate, onSelect, onFocus }) => {
         e.preventDefault();
         addItem(index);
         break;
-        
+
       case 'Backspace':
         if (e.target.value === '' && block.content.items.length > 1) {
           e.preventDefault();
@@ -93,14 +93,14 @@ const ListBlock = ({ block, isSelected, onUpdate, onSelect, onFocus }) => {
           }, 50);
         }
         break;
-        
+
       case 'ArrowUp':
         if (e.ctrlKey || e.metaKey) {
           e.preventDefault();
           moveItem(index, index - 1);
         }
         break;
-        
+
       case 'ArrowDown':
         if (e.ctrlKey || e.metaKey) {
           e.preventDefault();
@@ -177,7 +177,7 @@ const ListBlock = ({ block, isSelected, onUpdate, onSelect, onFocus }) => {
     const values = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
     const symbols = ['M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I'];
     let result = '';
-    
+
     for (let i = 0; i < values.length; i++) {
       while (num >= values[i]) {
         result += symbols[i];
@@ -201,18 +201,16 @@ const ListBlock = ({ block, isSelected, onUpdate, onSelect, onFocus }) => {
           <div className="flex items-center space-x-1">
             <button
               onClick={() => updateListType('bullet')}
-              className={`px-2 py-1 text-xs rounded ${
-                getListType() === 'bullet' ? 'bg-cyner-blue' : 'hover:bg-gray-700'
-              }`}
+              className={`px-2 py-1 text-xs rounded ${getListType() === 'bullet' ? 'bg-cyner-blue' : 'hover:bg-gray-700'
+                }`}
               title="Liste à puces"
             >
               • Liste
             </button>
             <button
               onClick={() => updateListType('numbered')}
-              className={`px-2 py-1 text-xs rounded ${
-                getListType() === 'numbered' ? 'bg-cyner-blue' : 'hover:bg-gray-700'
-              }`}
+              className={`px-2 py-1 text-xs rounded ${getListType() === 'numbered' ? 'bg-cyner-blue' : 'hover:bg-gray-700'
+                }`}
               title="Liste numérotée"
             >
               1. Liste
@@ -226,27 +224,24 @@ const ListBlock = ({ block, isSelected, onUpdate, onSelect, onFocus }) => {
             <div className="flex items-center space-x-1">
               <button
                 onClick={() => updateBulletStyle('disc')}
-                className={`px-2 py-1 text-xs rounded ${
-                  getBulletStyle() === 'disc' ? 'bg-cyner-blue' : 'hover:bg-gray-700'
-                }`}
+                className={`px-2 py-1 text-xs rounded ${getBulletStyle() === 'disc' ? 'bg-cyner-blue' : 'hover:bg-gray-700'
+                  }`}
                 title="Puce pleine"
               >
                 •
               </button>
               <button
                 onClick={() => updateBulletStyle('circle')}
-                className={`px-2 py-1 text-xs rounded ${
-                  getBulletStyle() === 'circle' ? 'bg-cyner-blue' : 'hover:bg-gray-700'
-                }`}
+                className={`px-2 py-1 text-xs rounded ${getBulletStyle() === 'circle' ? 'bg-cyner-blue' : 'hover:bg-gray-700'
+                  }`}
                 title="Puce vide"
               >
                 ○
               </button>
               <button
                 onClick={() => updateBulletStyle('square')}
-                className={`px-2 py-1 text-xs rounded ${
-                  getBulletStyle() === 'square' ? 'bg-cyner-blue' : 'hover:bg-gray-700'
-                }`}
+                className={`px-2 py-1 text-xs rounded ${getBulletStyle() === 'square' ? 'bg-cyner-blue' : 'hover:bg-gray-700'
+                  }`}
                 title="Puce carrée"
               >
                 ▪
@@ -256,27 +251,24 @@ const ListBlock = ({ block, isSelected, onUpdate, onSelect, onFocus }) => {
             <div className="flex items-center space-x-1">
               <button
                 onClick={() => updateNumberStyle('decimal')}
-                className={`px-2 py-1 text-xs rounded ${
-                  getNumberStyle() === 'decimal' ? 'bg-cyner-blue' : 'hover:bg-gray-700'
-                }`}
+                className={`px-2 py-1 text-xs rounded ${getNumberStyle() === 'decimal' ? 'bg-cyner-blue' : 'hover:bg-gray-700'
+                  }`}
                 title="Numéros"
               >
                 1,2,3
               </button>
               <button
                 onClick={() => updateNumberStyle('roman')}
-                className={`px-2 py-1 text-xs rounded ${
-                  getNumberStyle() === 'roman' ? 'bg-cyner-blue' : 'hover:bg-gray-700'
-                }`}
+                className={`px-2 py-1 text-xs rounded ${getNumberStyle() === 'roman' ? 'bg-cyner-blue' : 'hover:bg-gray-700'
+                  }`}
                 title="Chiffres romains"
               >
                 i,ii,iii
               </button>
               <button
                 onClick={() => updateNumberStyle('alpha')}
-                className={`px-2 py-1 text-xs rounded ${
-                  getNumberStyle() === 'alpha' ? 'bg-cyner-blue' : 'hover:bg-gray-700'
-                }`}
+                className={`px-2 py-1 text-xs rounded ${getNumberStyle() === 'alpha' ? 'bg-cyner-blue' : 'hover:bg-gray-700'
+                  }`}
                 title="Lettres"
               >
                 a,b,c
@@ -323,8 +315,8 @@ const ListBlock = ({ block, isSelected, onUpdate, onSelect, onFocus }) => {
       <div
         className={`
           w-full p-3 border-2 border-transparent rounded-md transition-all duration-200
-          ${isSelected 
-            ? 'border-cyner-blue bg-blue-50' 
+          ${isSelected
+            ? 'border-cyner-blue bg-blue-50'
             : 'hover:border-gray-200 hover:bg-gray-50'
           }
         `}
@@ -343,7 +335,7 @@ const ListBlock = ({ block, isSelected, onUpdate, onSelect, onFocus }) => {
             >
               {/* List marker */}
               <div className="flex-shrink-0 w-6 text-center text-gray-500 font-medium pt-0.5">
-                {getListType() === 'bullet' 
+                {getListType() === 'bullet'
                   ? getBulletChar(getBulletStyle())
                   : getNumberPrefix(index, getNumberStyle())
                 }
@@ -358,13 +350,14 @@ const ListBlock = ({ block, isSelected, onUpdate, onSelect, onFocus }) => {
                 onFocus={onFocus}
                 placeholder={index === 0 ? "Premier élément..." : "Nouvel élément..."}
                 className="flex-1 border-none focus:outline-none focus:ring-0 bg-transparent text-gray-900 placeholder-gray-400"
+                style={{ direction: 'ltr', unicodeBidi: 'normal' }}
+                dir="ltr"
                 onClick={(e) => e.stopPropagation()}
               />
 
               {/* Item actions */}
-              <div className={`flex items-center space-x-1 transition-opacity duration-200 ${
-                selectedItemIndex === index ? 'opacity-100' : 'opacity-0'
-              }`}>
+              <div className={`flex items-center space-x-1 transition-opacity duration-200 ${selectedItemIndex === index ? 'opacity-100' : 'opacity-0'
+                }`}>
                 {/* Move up */}
                 <button
                   onClick={(e) => {

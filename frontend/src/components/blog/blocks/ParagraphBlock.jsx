@@ -162,7 +162,7 @@ const ParagraphBlock = ({ block, isSelected, onUpdate, onSelect, onFocus }) => {
           >
             <LinkIcon className="h-3 w-3" />
           </button>
-          
+
           {/* Alignment controls */}
           <div className="w-px h-4 bg-gray-700 mx-1"></div>
           <select
@@ -207,16 +207,19 @@ const ParagraphBlock = ({ block, isSelected, onUpdate, onSelect, onFocus }) => {
         className={`
           w-full p-3 min-h-[2.5rem] outline-none border-2 border-transparent rounded-md transition-all duration-200
           ${getFontSize()} ${getTextAlign()}
-          ${isSelected 
-            ? 'border-cyner-blue bg-blue-50' 
+          ${isSelected
+            ? 'border-cyner-blue bg-blue-50'
             : 'hover:border-gray-200 hover:bg-gray-50'
           }
           ${!block.content.text ? 'text-gray-400' : 'text-gray-900'}
         `}
-        style={{ 
+        style={{
           color: block.styles?.color || undefined,
-          lineHeight: '1.6'
+          lineHeight: '1.6',
+          direction: 'ltr',
+          unicodeBidi: 'normal'
         }}
+        dir="ltr"
         onClick={handleClick}
         onFocus={onFocus}
         onBlur={handleBlur}

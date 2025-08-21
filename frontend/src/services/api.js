@@ -128,27 +128,27 @@ export const blogService = {
   // Récupérer tous les articles
   getArticles: async (params = {}) => {
     const response = await api.get('/blog/articles', { params });
-    return response.data;
+    return response.data.data;
   },
 
   // Récupérer un article par ID
   getArticle: async (id) => {
     const response = await api.get(`/blog/articles/${id}`);
-    return response.data;
+    return response.data.data;
   },
 
   // Créer un article
   createArticle: async (articleData) => {
     const response = await api.post('/blog/articles', articleData);
     toast.success('Article créé avec succès');
-    return response.data;
+    return response.data.data;
   },
 
   // Mettre à jour un article
   updateArticle: async (id, articleData) => {
     const response = await api.put(`/blog/articles/${id}`, articleData);
     toast.success('Article mis à jour');
-    return response.data;
+    return response.data.data;
   },
 
   // Supprimer un article
@@ -171,7 +171,7 @@ export const blogService = {
   // Récupérer catégories
   getCategories: async () => {
     const response = await api.get('/blog/categories');
-    return response.data;
+    return response.data.data;
   },
 
   // Changer le statut d'un article
@@ -394,6 +394,8 @@ export const jobService = {
     toast.success('Candidature envoyée avec succès');
     return response.data;
   },
+
+
 
   // Statistiques d'un article
   getArticleStats: async (id) => {

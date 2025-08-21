@@ -81,10 +81,10 @@ const HeadingBlock = ({ block, isSelected, onUpdate, onSelect, onFocus }) => {
   const getHeadingClasses = () => {
     const level = block.content.level || 2;
     const baseClasses = 'font-bold text-gray-900 leading-tight';
-    
+
     const sizeClasses = {
       1: 'text-4xl md:text-5xl',
-      2: 'text-3xl md:text-4xl', 
+      2: 'text-3xl md:text-4xl',
       3: 'text-2xl md:text-3xl',
       4: 'text-xl md:text-2xl',
       5: 'text-lg md:text-xl',
@@ -115,11 +115,10 @@ const HeadingBlock = ({ block, isSelected, onUpdate, onSelect, onFocus }) => {
               <button
                 key={level}
                 onClick={() => updateLevel(level)}
-                className={`px-2 py-1 text-xs rounded ${
-                  block.content.level === level
+                className={`px-2 py-1 text-xs rounded ${block.content.level === level
                     ? 'bg-cyner-blue text-white'
                     : 'hover:bg-gray-700'
-                }`}
+                  }`}
                 title={`Titre niveau ${level} (Ctrl+${level})`}
               >
                 H{level}
@@ -133,27 +132,24 @@ const HeadingBlock = ({ block, isSelected, onUpdate, onSelect, onFocus }) => {
           <div className="flex items-center space-x-1">
             <button
               onClick={() => updateAlignment('left')}
-              className={`p-1.5 text-xs rounded ${
-                getAlignment() === 'left' ? 'bg-cyner-blue' : 'hover:bg-gray-700'
-              }`}
+              className={`p-1.5 text-xs rounded ${getAlignment() === 'left' ? 'bg-cyner-blue' : 'hover:bg-gray-700'
+                }`}
               title="Aligner à gauche"
             >
               ↰
             </button>
             <button
               onClick={() => updateAlignment('center')}
-              className={`p-1.5 text-xs rounded ${
-                getAlignment() === 'center' ? 'bg-cyner-blue' : 'hover:bg-gray-700'
-              }`}
+              className={`p-1.5 text-xs rounded ${getAlignment() === 'center' ? 'bg-cyner-blue' : 'hover:bg-gray-700'
+                }`}
               title="Centrer"
             >
               ≡
             </button>
             <button
               onClick={() => updateAlignment('right')}
-              className={`p-1.5 text-xs rounded ${
-                getAlignment() === 'right' ? 'bg-cyner-blue' : 'hover:bg-gray-700'
-              }`}
+              className={`p-1.5 text-xs rounded ${getAlignment() === 'right' ? 'bg-cyner-blue' : 'hover:bg-gray-700'
+                }`}
               title="Aligner à droite"
             >
               ↱
@@ -185,15 +181,18 @@ const HeadingBlock = ({ block, isSelected, onUpdate, onSelect, onFocus }) => {
         className={`
           w-full p-3 min-h-[3rem] outline-none border-2 border-transparent rounded-md transition-all duration-200
           ${getHeadingClasses()}
-          ${isSelected 
-            ? 'border-cyner-blue bg-blue-50' 
+          ${isSelected
+            ? 'border-cyner-blue bg-blue-50'
             : 'hover:border-gray-200 hover:bg-gray-50'
           }
           ${!block.content.text ? 'text-gray-400' : ''}
         `}
-        style={{ 
-          color: block.styles?.color || undefined
+        style={{
+          color: block.styles?.color || undefined,
+          direction: 'ltr',
+          unicodeBidi: 'normal'
         }}
+        dir="ltr"
         onClick={handleClick}
         onFocus={onFocus}
         onBlur={handleBlur}

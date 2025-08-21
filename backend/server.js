@@ -12,6 +12,7 @@ import newsletterRoutes from './routes/newsletter.js';
 import contentRoutes from './routes/content.js';
 import dashboardRoutes from './routes/dashboard.js';
 
+
 // Configuration
 dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
@@ -52,6 +53,7 @@ app.use('/api/jobs', jobRoutes);
 app.use('/api/newsletter', newsletterRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/blog', blogRoutes);
 
 // Route test database connection
 app.get('/api/health', async (req, res) => {
