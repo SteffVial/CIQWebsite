@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom'; // ← AJOUT IMPORTANT
 import { BLOCK_TYPES, createBlock } from '../../types/blogTypes';
 import {
   PlusIcon,
@@ -28,9 +29,10 @@ const BlockEditor = ({
   const [draggedBlockId, setDraggedBlockId] = useState(null);
   const [dropPosition, setDropPosition] = useState(null);
   const [showAddMenu, setShowAddMenu] = useState(null);
+  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 }); // ← NOUVEAU
   const dragCounter = useRef(0);
   const [showActionsMenu, setShowActionsMenu] = useState(null);
-
+  const addButtonRef = useRef(null); // ← NOUVEAU
 
   // Types de blocs disponibles pour le menu d'ajout
   const blockTypes = [
@@ -42,7 +44,21 @@ const BlockEditor = ({
     { type: BLOCK_TYPES.SEPARATOR, label: 'Séparateur', icon: '—', description: 'Ligne de séparation' }
   ];
 
-  // Gestion du drag & drop
+  // ← FONCTION POUR CALCULER LA POSITION DU MENU
+  const calculateMenuPosition = (buttonElement) => {
+    if (!buttonElement) return { x: 0, y: 0 };
+    
+    const rect = buttonElement.getBoundingClientRect();
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+    
+    return {
+      x: rect.left + scrollLeft,
+      y: rect.bottom + scrollTop + 4 // 4px de marge
+    };
+  };
+
+  // [Gardez toutes vos fonctions de drag & drop existantes...]
   const handleDragStart = (e, blockId) => {
     setDraggedBlockId(blockId);
     e.dataTransfer.effectAllowed = 'move';
@@ -120,6 +136,17 @@ const BlockEditor = ({
     onBlocksChange(newBlocks);
   }, [blocks, onBlocksChange]);
 
+  // ← NOUVELLE FONCTION POUR OUVRIR LE MENU
+  const handleAddMenuToggle = (blockId, buttonElement) => {
+    if (showAddMenu === blockId) {
+      setShowAddMenu(null);
+    } else {
+      const position = calculateMenuPosition(buttonElement);
+      setMenuPosition(position);
+      setShowAddMenu(blockId);
+    }
+  };
+
   // Rendu d'un bloc selon son type
   const renderBlock = (block) => {
     const commonProps = {
@@ -184,6 +211,7 @@ const BlockEditor = ({
               ? 'opacity-100'
               : 'opacity-0 group-hover:opacity-100'
               }`}>
+              
               {/* Drag handle */}
               <button
                 className="p-1 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing"
@@ -192,73 +220,25 @@ const BlockEditor = ({
                 <Bars3Icon className="h-4 w-4" />
               </button>
 
-              {/* Add block menu */}
-              <div className="relative">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowAddMenu(showAddMenu === block.id ? null : block.id);
-                  }}
-                  className="p-1 text-gray-400 hover:text-cyner-blue"
-                  title="Ajouter un bloc"
-                >
-                  <PlusIcon className="h-4 w-4" />
-                </button>
+              {/* Add block menu - MODIFIÉ */}
+              <button
+                ref={addButtonRef}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddMenuToggle(block.id, e.currentTarget);
+                }}
+                className="p-1 text-gray-400 hover:text-cyner-blue"
+                title="Ajouter un bloc"
+              >
+                <PlusIcon className="h-4 w-4" />
+              </button>
 
-                {/* Menu déroulant d'ajout */}
-                {showAddMenu === block.id && (
-                  <>
-                    {/* Overlay pour fermer le menu */}
-                    <div
-                      className="fixed inset-0 z-[250]"
-                      onClick={() => setShowAddMenu(null)}
-                    />
-
-                    {/* Menu avec z-index élevé */}
-                    <div
-                      className="absolute left-0 top-full mt-1 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-[300]"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div className="p-2">
-                        <div className="text-xs font-medium text-gray-500 mb-2 px-2">
-                          Ajouter un bloc
-                        </div>
-                        {blockTypes.map((blockType) => (
-                          <button
-                            key={blockType.type}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onAddBlock(blockType.type, index);
-                              setShowAddMenu(null);
-                            }}
-                            className="w-full flex items-center space-x-3 px-2 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
-                          >
-                            <span className="w-8 h-8 bg-gray-100 rounded-md flex items-center justify-center text-sm">
-                              {blockType.icon}
-                            </span>
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm font-medium text-gray-900">
-                                {blockType.label}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                {blockType.description}
-                              </div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Block actions menu */}
               {/* Block actions menu */}
               <div className="relative">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setShowActionsMenu(showActionsMenu === block.id ? null : block.id); // ✅ Ajoutez cette ligne
+                    setShowActionsMenu(showActionsMenu === block.id ? null : block.id);
                   }}
                   className="p-1 text-gray-400 hover:text-gray-600"
                   title="Options du bloc"
@@ -269,21 +249,17 @@ const BlockEditor = ({
                 {/* Actions menu */}
                 {showActionsMenu === block.id && (
                   <>
-                    {/* Overlay qui évite la zone du menu */}
                     <div
                       className="fixed inset-0 z-30"
                       onClick={() => setShowActionsMenu(null)}
                     />
-
-                    {/* Menu avec z-index plus élevé */}
                     <div
                       className="absolute left-0 bottom-full mb-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-[200]"
-                      onClick={(e) => e.stopPropagation()} // ✅ Empêche la propagation
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <div className="p-1">
                         <button
                           onClick={() => {
-                            console.log('🔍 Bouton cliqué');
                             onDuplicateBlock(block.id);
                             setShowActionsMenu(null);
                           }}
@@ -294,7 +270,6 @@ const BlockEditor = ({
                         </button>
                         <button
                           onClick={() => {
-                            console.log('🔍 Bouton supprimer cliqué');
                             if (window.confirm('Supprimer ce bloc ?')) {
                               onDeleteBlock(block.id);
                             }
@@ -325,7 +300,57 @@ const BlockEditor = ({
         </div>
       ))}
 
-      
+      {/* ← MENU D'AJOUT RENDU AVEC PORTAL */}
+      {showAddMenu && createPortal(
+        <>
+          {/* Overlay */}
+          <div
+            className="fixed inset-0 z-[9998]"
+            onClick={() => setShowAddMenu(null)}
+          />
+          
+          {/* Menu */}
+          <div
+            className="fixed w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999]"
+            style={{
+              left: `${menuPosition.x}px`,
+              top: `${menuPosition.y}px`,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-2">
+              <div className="text-xs font-medium text-gray-500 mb-2 px-2">
+                Ajouter un bloc
+              </div>
+              {blockTypes.map((blockType) => (
+                <button
+                  key={blockType.type}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const blockIndex = blocks.findIndex(b => b.id === showAddMenu);
+                    onAddBlock(blockType.type, blockIndex);
+                    setShowAddMenu(null);
+                  }}
+                  className="w-full flex items-center space-x-3 px-2 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
+                >
+                  <span className="w-8 h-8 bg-gray-100 rounded-md flex items-center justify-center text-sm">
+                    {blockType.icon}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-gray-900">
+                      {blockType.label}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {blockType.description}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </>,
+        document.body // ← RENDU DIRECTEMENT DANS LE BODY
+      )}
     </div>
   );
 };

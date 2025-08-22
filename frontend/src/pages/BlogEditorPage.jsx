@@ -3,10 +3,10 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { blogService, queryKeys } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { 
-  ARTICLE_STATUS, 
-  BLOCK_TYPES, 
-  createBlock, 
+import {
+  ARTICLE_STATUS,
+  BLOCK_TYPES,
+  createBlock,
   createEmptyArticle,
   validateArticle,
   calculateReadTime
@@ -31,9 +31,9 @@ const BlogEditorPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  
+
   const isEditing = Boolean(id);
-  
+
   // États locaux
   const [article, setArticle] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -72,7 +72,7 @@ const BlogEditorPage = () => {
       setHasUnsavedChanges(false);
       setAutoSaveStatus('saved');
       queryClient.invalidateQueries({ queryKey: queryKeys.articles() });
-      
+
       // Rediriger vers l'édition si c'était une création
       if (!isEditing) {
         navigate(`/admin/blog/edit/${data.id}`, { replace: true });
@@ -128,7 +128,7 @@ const BlogEditorPage = () => {
       ...block,
       order: index
     }));
-    
+
     updateArticle({
       blocks: processedBlocks,
       stats: {
@@ -140,26 +140,26 @@ const BlogEditorPage = () => {
 
   const addBlock = useCallback((type, afterIndex = -1) => {
     if (!article) return;
-    
+
     const newBlock = createBlock(type, {}, 0);
     const newBlocks = [...article.blocks];
-    
+
     if (afterIndex >= 0) {
       newBlocks.splice(afterIndex + 1, 0, newBlock);
     } else {
       newBlocks.push(newBlock);
     }
-    
+
     updateBlocks(newBlocks);
     setSelectedBlockId(newBlock.id);
   }, [article, updateBlocks]);
 
   const deleteBlock = useCallback((blockId) => {
     if (!article) return;
-    
+
     const newBlocks = article.blocks.filter(block => block.id !== blockId);
     updateBlocks(newBlocks);
-    
+
     if (selectedBlockId === blockId) {
       setSelectedBlockId(null);
     }
@@ -167,19 +167,19 @@ const BlogEditorPage = () => {
 
   const duplicateBlock = useCallback((blockId) => {
     if (!article) return;
-    
+
     const blockIndex = article.blocks.findIndex(block => block.id === blockId);
     if (blockIndex === -1) return;
-    
+
     const originalBlock = article.blocks[blockIndex];
     const duplicatedBlock = {
       ...originalBlock,
       id: crypto.randomUUID()
     };
-    
+
     const newBlocks = [...article.blocks];
     newBlocks.splice(blockIndex + 1, 0, duplicatedBlock);
-    
+
     updateBlocks(newBlocks);
     setSelectedBlockId(duplicatedBlock.id);
   }, [article, updateBlocks]);
@@ -190,7 +190,7 @@ const BlogEditorPage = () => {
       alert('Veuillez remplir tous les champs requis');
       return;
     }
-    
+
     saveMutation.mutate(article);
   };
 
@@ -240,6 +240,7 @@ const BlogEditorPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50" style={{ direction: 'ltr' }} dir="ltr">
+
       {/* Header fixe */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -248,7 +249,8 @@ const BlogEditorPage = () => {
             <div className="flex items-center space-x-4">
               <Link
                 to="/admin/blog"
-                className="p-2 text-gray-500 hover:text-cyner-blue rounded-md transition-colors"
+                className="p-2 text-gray-500 hover:text-cyner-blue hover:bg-gray-100 rounded-md transition-colors"
+                title="Retour à la liste des articles"
               >
                 <ChevronLeftIcon className="h-5 w-5" />
               </Link>
@@ -258,13 +260,24 @@ const BlogEditorPage = () => {
                 </h1>
                 <div className="flex items-center space-x-4 text-sm text-gray-500">
                   <span>
-                    {autoSaveStatus === 'saving' && 'Sauvegarde...'}
-                    {autoSaveStatus === 'saved' && 'Sauvegardé'}
-                    {autoSaveStatus === 'error' && 'Erreur de sauvegarde'}
-                    {autoSaveStatus === 'pending' && hasUnsavedChanges && 'Modifications non sauvegardées'}
+                    {autoSaveStatus === 'saving' && (
+                      <span className="flex items-center text-yellow-600">
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-yellow-600 mr-1"></div>
+                        Sauvegarde...
+                      </span>
+                    )}
+                    {autoSaveStatus === 'saved' && (
+                      <span className="text-green-600">✓ Sauvegardé</span>
+                    )}
+                    {autoSaveStatus === 'error' && (
+                      <span className="text-red-600">⚠ Erreur de sauvegarde</span>
+                    )}
+                    {autoSaveStatus === 'pending' && hasUnsavedChanges && (
+                      <span className="text-orange-600">● Modifications non sauvegardées</span>
+                    )}
                   </span>
                   {article.stats?.readTime && (
-                    <span className="flex items-center">
+                    <span className="flex items-center text-gray-500">
                       <ClockIcon className="h-4 w-4 mr-1" />
                       {article.stats.readTime} min de lecture
                     </span>
@@ -273,16 +286,16 @@ const BlogEditorPage = () => {
               </div>
             </div>
 
-            {/* Right side */}
+            {/* Right side - COULEURS CORRIGÉES */}
             <div className="flex items-center space-x-4">
               {/* Preview toggle */}
               <button
                 onClick={() => setShowPreview(!showPreview)}
-                className={`p-2 rounded-md transition-colors ${
-                  showPreview 
-                    ? 'bg-cyner-blue text-white' 
-                    : 'text-gray-500 hover:text-cyner-blue hover:bg-gray-100'
-                }`}
+                className={`p-2 rounded-md transition-colors border ${showPreview
+                    ? 'bg-cyner-blue text-white border-cyner-blue'
+                    : 'text-gray-600 hover:text-cyner-blue hover:bg-gray-100 border-gray-300'
+                  }`}
+                title="Aperçu"
               >
                 <EyeIcon className="h-5 w-5" />
               </button>
@@ -290,20 +303,23 @@ const BlogEditorPage = () => {
               {/* Metadata toggle */}
               <button
                 onClick={() => setShowMetadata(!showMetadata)}
-                className={`p-2 rounded-md transition-colors ${
-                  showMetadata 
-                    ? 'bg-cyner-blue text-white' 
-                    : 'text-gray-500 hover:text-cyner-blue hover:bg-gray-100'
-                }`}
+                className={`p-2 rounded-md transition-colors border ${showMetadata
+                    ? 'bg-cyner-blue text-white border-cyner-blue'
+                    : 'text-gray-600 hover:text-cyner-blue hover:bg-gray-100 border-gray-300'
+                  }`}
+                title="Métadonnées"
               >
                 <Bars3Icon className="h-5 w-5" />
               </button>
 
-              {/* Save button */}
+              {/* Save button - COULEURS FIXES */}
               <button
                 onClick={handleSave}
                 disabled={saveMutation.isPending || !hasUnsavedChanges}
-                className="inline-flex items-center px-4 py-2 bg-cyner-blue text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className={`inline-flex items-center px-4 py-2 font-medium rounded-lg transition-colors border ${hasUnsavedChanges
+                    ? 'bg-cyner-blue text-white border-cyner-blue hover:bg-blue-700'
+                    : 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
+                  } ${saveMutation.isPending ? 'opacity-75 cursor-not-allowed' : ''}`}
               >
                 {saveMutation.isPending ? (
                   <>
@@ -322,7 +338,8 @@ const BlogEditorPage = () => {
               {article.status === ARTICLE_STATUS.DRAFT && (
                 <button
                   onClick={() => handleStatusChange(ARTICLE_STATUS.IN_REVIEW)}
-                  className="px-4 py-2 bg-yellow-600 text-white font-medium rounded-lg hover:bg-yellow-700 transition-colors"
+                  disabled={!validateArticle(article)}
+                  className="px-4 py-2 bg-yellow-600 text-white font-medium rounded-lg hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-yellow-600"
                 >
                   Soumettre pour révision
                 </button>
@@ -336,9 +353,8 @@ const BlogEditorPage = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex gap-6">
           {/* Editor column */}
-          <div className={`transition-all duration-300 ${
-            showPreview ? 'w-1/2' : 'w-full max-w-4xl mx-auto'
-          }`}>
+          <div className={`transition-all duration-300 ${showPreview ? 'w-1/2' : 'w-full max-w-4xl mx-auto'
+            }`}>
             <div className="bg-white rounded-lg shadow-sm border border-gray-200" style={{ direction: 'ltr' }} dir="ltr">
               {/* Article title */}
               <div className="p-6 border-b border-gray-200">

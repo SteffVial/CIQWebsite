@@ -34,9 +34,9 @@ const AdminLayout = () => {
   const navigation = [
     {
       name: 'Dashboard',
-      href: '/admin',
+      href: '/admin/dashbaord',
       icon: HomeIcon,
-      current: location.pathname === '/admin',
+      current: location.pathname === '/admin' || location.pathname === '/admin/dashboard',
       roles: ['admin', 'blogadmin', 'careeradmin', 'contentadmin']
     },
     {
@@ -46,7 +46,7 @@ const AdminLayout = () => {
       current: location.pathname.startsWith('/admin/blog'),
       roles: ['admin', 'blogadmin'],
       children: [
-        { name: 'Articles', href: '/admin/blog/articles' },
+        { name: 'Articles', href: '/admin/blog' },
         { name: 'Catégories', href: '/admin/blog/categories' },
         { name: 'Nouveau', href: '/admin/blog/new' },
       ]
@@ -110,7 +110,7 @@ const AdminLayout = () => {
   ];
 
   // Filtrer la navigation selon les rôles
-  const filteredNavigation = navigation.filter(item => 
+  const filteredNavigation = navigation.filter(item =>
     item.roles.some(role => hasRole(user?.roles, role))
   );
 
@@ -283,17 +283,17 @@ const SidebarContent = ({ navigation }) => {
 // Composant NavItem pour gérer les sous-menus
 const NavItem = ({ item }) => {
   const [expanded, setExpanded] = useState(item.current);
+  const location = useLocation(); // ← AJOUT pour détecter la page active
 
   if (item.children) {
     return (
       <div>
         <button
           onClick={() => setExpanded(!expanded)}
-          className={`w-full group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-            item.current
+          className={`w-full group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors ${item.current
               ? 'bg-cyner-blue text-white'
               : 'text-gray-700 hover:text-cyner-blue hover:bg-gray-50'
-          }`}
+            }`}
         >
           <div className="flex items-center">
             <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
@@ -303,14 +303,17 @@ const NavItem = ({ item }) => {
             className={`h-4 w-4 transition-transform ${expanded ? 'rotate-180' : ''}`}
           />
         </button>
-        
+
         {expanded && (
           <div className="mt-1 space-y-1">
             {item.children.map((child) => (
               <Link
                 key={child.name}
                 to={child.href}
-                className="group flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:text-cyner-blue hover:bg-gray-50 ml-8"
+                className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md ml-8 transition-colors ${location.pathname === child.href
+                    ? 'text-cyner-blue bg-blue-50'
+                    : 'text-gray-600 hover:text-cyner-blue hover:bg-gray-50'
+                  }`}
               >
                 {child.name}
               </Link>
@@ -324,11 +327,10 @@ const NavItem = ({ item }) => {
   return (
     <Link
       to={item.href}
-      className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-        item.current
+      className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${item.current
           ? 'bg-cyner-blue text-white'
           : 'text-gray-700 hover:text-cyner-blue hover:bg-gray-50'
-      }`}
+        }`}
     >
       <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
       {item.name}
