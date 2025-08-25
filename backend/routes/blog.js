@@ -53,15 +53,24 @@ router.get('/articles', async (req, res) => {
     let whereConditions = [];
     let queryParams = [];
 
-    // Construire les conditions WHERE
-    if (status && req.user?.roles?.includes('admin')) {
-      whereConditions.push(`a.status = $${queryParams.length + 1}`);
-      queryParams.push(status);
-    } else if (!req.user || !req.user.roles?.includes('admin')) {
-      // Public ne voit que les articles publiés
-      whereConditions.push(`a.status = $${queryParams.length + 1}`);
-      queryParams.push('published');
-    }
+// Construire les conditions WHERE pour le statut
+if (status && status !== 'all') {
+  // Statut spécifique demandé
+  whereConditions.push(`a.status = $${queryParams.length + 1}`);
+  queryParams.push(status);
+} else {
+  // Pas de statut ou "all" - vérifier les permissions
+  if (!req.user) {
+    // Utilisateur non connecté = seulement publiés
+    whereConditions.push(`a.status = $${queryParams.length + 1}`);
+    queryParams.push('published');
+  } else if (!req.user.roles?.includes('admin') && !req.user.roles?.includes('blogadmin')) {
+    // Utilisateur connecté mais pas admin = seulement publiés
+    whereConditions.push(`a.status = $${queryParams.length + 1}`);
+    queryParams.push('published');
+  }
+  // Admin/blogadmin sans filtre = TOUS les articles (pas de condition WHERE)
+}
 
     if (search) {
       whereConditions.push(`(a.title ILIKE $${queryParams.length + 1} OR a.excerpt ILIKE $${queryParams.length + 1})`);

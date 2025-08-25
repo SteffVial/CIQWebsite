@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { blogService, queryKeys } from '../services/api';
@@ -25,11 +25,12 @@ const BlogListPage = () => {
 
   // Récupération des articles
   const { data: articles, isLoading } = useQuery({
-    queryKey: queryKeys.articles({ 
+    queryKey: queryKeys.articles({
       search: searchTerm,
-      status: statusFilter !== 'all' ? statusFilter : undefined,
+      status: statusFilter,
       sortBy,
-      sortOrder
+      sortOrder,
+      _refresh: statusFilter // Force le refresh quand statusFilter change
     }),
     queryFn: () => blogService.getArticles({
       search: searchTerm,
@@ -37,8 +38,22 @@ const BlogListPage = () => {
       sortBy,
       sortOrder
     }),
-    refetchInterval: 30000 // Refresh toutes les 30 secondes
+    refetchInterval: 30000, // Refresh toutes les 30 secondes
+    enabled: true  // ← AJOUTER cette ligne
   });
+
+  //useEffect(() => {
+  //queryClient.refetchQueries({ 
+ //   queryKey: queryKeys.articles({
+ //     search: searchTerm,
+  //    status: statusFilter !== 'all' ? statusFilter : undefined,
+//      sortBy,
+//      sortOrder
+//    })
+//  });
+//}, [statusFilter, searchTerm, sortBy, sortOrder, queryClient]);
+
+
 
   // Mutation pour supprimer un article
   const deleteArticleMutation = useMutation({
@@ -68,16 +83,16 @@ const BlogListPage = () => {
 
   const canEdit = (article) => {
     // Admin peut tout éditer, blogadmin peut éditer ses propres articles
-    return hasRole(user?.roles, 'admin') || 
-           (hasRole(user?.roles, 'blogadmin') && article.author.id === user.id);
+    return hasRole(user?.roles, 'admin') ||
+      (hasRole(user?.roles, 'blogadmin') && article.author.id === user.id);
   };
 
   const canDelete = (article) => {
     // Seul admin peut supprimer ou blogadmin ses propres brouillons
-    return hasRole(user?.roles, 'admin') || 
-           (hasRole(user?.roles, 'blogadmin') && 
-            article.author.id === user.id && 
-            article.status === ARTICLE_STATUS.DRAFT);
+    return hasRole(user?.roles, 'admin') ||
+      (hasRole(user?.roles, 'blogadmin') &&
+        article.author.id === user.id &&
+        article.status === ARTICLE_STATUS.DRAFT);
   };
 
   const getNextStatus = (currentStatus) => {
@@ -96,7 +111,7 @@ const BlogListPage = () => {
   const getNextStatusLabel = (currentStatus) => {
     const nextStatus = getNextStatus(currentStatus);
     if (!nextStatus) return null;
-    
+
     switch (nextStatus) {
       case ARTICLE_STATUS.IN_REVIEW:
         return 'Soumettre pour révision';
@@ -112,7 +127,7 @@ const BlogListPage = () => {
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
       day: '2-digit',
-      month: '2-digit', 
+      month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
@@ -222,7 +237,7 @@ const BlogListPage = () => {
               Aucun article trouvé
             </h3>
             <p className="text-gray-500 mb-6">
-              {searchTerm || statusFilter !== 'all' 
+              {searchTerm || statusFilter !== 'all'
                 ? 'Essayez de modifier vos filtres de recherche.'
                 : 'Commencez par créer votre premier article.'
               }
@@ -249,11 +264,11 @@ const BlogListPage = () => {
                         {getStatusLabel(article.status)}
                       </span>
                     </div>
-                    
+
                     <p className="text-gray-600 text-sm mb-3 line-clamp-2">
                       {article.excerpt || 'Aucun extrait disponible'}
                     </p>
-                    
+
                     <div className="flex items-center space-x-6 text-sm text-gray-500">
                       <div className="flex items-center space-x-1">
                         <span>Par {article.author.username}</span>
@@ -274,7 +289,7 @@ const BlogListPage = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Actions */}
                   <div className="flex items-center space-x-2 ml-4">
                     {/* Preview */}
@@ -285,7 +300,7 @@ const BlogListPage = () => {
                     >
                       <EyeIcon className="h-5 w-5" />
                     </Link>
-                    
+
                     {/* Edit */}
                     {canEdit(article) && (
                       <Link
@@ -296,7 +311,7 @@ const BlogListPage = () => {
                         <PencilIcon className="h-5 w-5" />
                       </Link>
                     )}
-                    
+
                     {/* Change Status */}
                     {getNextStatus(article.status) && (
                       <button
@@ -308,7 +323,7 @@ const BlogListPage = () => {
                         {getNextStatusLabel(article.status)}
                       </button>
                     )}
-                    
+
                     {/* Delete */}
                     {canDelete(article) && (
                       <button
